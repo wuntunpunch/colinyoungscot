@@ -21,15 +21,6 @@ export default function CaseStudyCard({
       <h3 className="text-xl font-semibold mb-2 group-hover:text-accent transition-colors">
         {title}
       </h3>
-      {date && (
-        <p className="text-sm mb-3 text-[rgba(165,217,255,1)]">
-          {new Date(date).toLocaleDateString("en-US", {
-            year: "numeric",
-            month: "long",
-            day: "numeric",
-          })}
-        </p>
-      )}
       <p className="leading-relaxed text-[rgba(246,246,246,0.8)]">
         {description}
       </p>

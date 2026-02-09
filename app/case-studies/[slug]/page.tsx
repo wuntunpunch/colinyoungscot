@@ -60,15 +60,6 @@ export default async function CaseStudyPage({ params }: CaseStudyPageProps) {
         <h1 className="text-4xl md:text-5xl font-semibold mb-4">
           {caseStudy.title}
         </h1>
-        {caseStudy.date && (
-          <p className="text-sm" style={{ color: "rgba(246, 246, 246, 1)" }}>
-            {new Date(caseStudy.date).toLocaleDateString("en-US", {
-              year: "numeric",
-              month: "long",
-              day: "numeric",
-            })}
-          </p>
-        )}
       </header>
 
       <div className="prose prose-invert max-w-none">

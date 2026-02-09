@@ -24,7 +24,7 @@ const initialText = [
   "Platform engineer by day, piano teacher by night.",
   "",
   "",
-  "If manual processes and repetitive admin work are eating up your day, you're wasting time and money. I build web and mobile apps that automate what shouldn't need a human.",
+  "If manual business processes and repetitive admin work are eating up your day, you're wasting time and money. I build web and mobile apps that automate what shouldn't need a human.",
   "",
   "Type 'help' for available commands.",
 ];
