@@ -1,3 +1,10 @@
+---
+title: EAT Cycling Booking System
+description: A custom dual-use booking system for EAT Cycling that serves both customers and staff, replacing a £600/year generic widget with a streamlined solution tailored to their workflow.
+slug: eat-cycling
+date: 2025-01-15
+---
+
 # Case Study: EAT Cycling Booking System
 
 ## Executive Summary
