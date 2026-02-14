@@ -29,7 +29,10 @@ export default function SnakeGame({ onClose, isMobile, colors }: SnakeGameProps)
   const [food, setFood] = useState<[number, number]>([10, 7]);
   const [nextDirection, setNextDirection] = useState<Direction>("right");
   const nextDirectionRef = useRef<Direction>("right");
-  nextDirectionRef.current = nextDirection;
+
+  useEffect(() => {
+    nextDirectionRef.current = nextDirection;
+  }, [nextDirection]);
 
   const [score, setScore] = useState(0);
   const [gameOver, setGameOver] = useState(false);
