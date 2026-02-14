@@ -17,6 +17,76 @@ type Commands = {
   [key: string]: CommandInfo;
 };
 
+const PROMPT = "colin@colinyoung:~$ ";
+
+// Generated with: figlet -f big Colinaut
+const ASCII_BANNER =
+  "\n" +
+  "  _____      _ _                   _   \n" +
+  " / ____|    | (_)                 | |  \n" +
+  "| |     ___ | |_ _ __   __ _ _   _| |_ \n" +
+  "| |    / _ \\| | | '_ \\ / _` | | | | __|\n" +
+  "| |___| (_) | | | | | | (_| | |_| | |_ \n" +
+  " \\_____\\___/|_|_|_| |_|\\__,_|\\__,_|\\__|\n";
+
+const FORTUNES = [
+  "There are only two hard things in Computer Science: cache invalidation and naming things.",
+  "rm -rf remains the most reliable uninstall method.",
+  "I'd rather write code than documentation. Sadly, the code documents my priorities.",
+  "Stack Overflow: it was nice while it lasted.",
+  "The best code is no code at all.",
+  "It works on my machine. (It's a very nice machine.)",
+  "Weeks of coding can save you hours of planning.",
+];
+
+const LS_DIRECTORIES = ["case-studies", "projects"] as const;
+
+const README_CONTENT =
+  "# colinyoung.scot\n\n" +
+  "Platform engineer by day, piano teacher by night.\n\n" +
+  "## What I do\n\n" +
+  "- Build web and mobile apps\n" +
+  "- Automate manual business processes\n" +
+  "- Teach piano\n\n" +
+  "## Navigation\n\n" +
+  "  cd case-studies  - View case studies\n" +
+  "  cd projects     - View projects\n" +
+  "  help            - List all commands\n";
+
+const MAN_COLIN =
+  "COLIN(1)                    General Commands Manual                   COLIN(1)\n\n" +
+  "NAME\n" +
+  "     Colin – Platform engineer and piano teacher\n\n" +
+  "SYNOPSIS\n" +
+  "     colin [--build] [--automate] [--teach]\n\n" +
+  "DESCRIPTION\n" +
+  "     Colin creates web and mobile applications, specializing in automating\n" +
+  "     manual business processes. By night, he teaches piano.\n\n" +
+  "OPTIONS\n" +
+  "     --build      Creates custom software solutions\n" +
+  "     --automate   Eliminates repetitive admin work\n" +
+  "     --teach      Piano instruction\n\n" +
+  "SEE ALSO\n" +
+  "     whoami(1), neofetch(1), man(1)\n";
+
+const COW_SAY = (msg: string) => {
+  const maxLen = 40;
+  const displayMsg = msg.length > maxLen - 2 ? msg.slice(0, maxLen - 3) + "…" : msg;
+  const line = "─".repeat(Math.min(displayMsg.length + 2, maxLen));
+  return (
+    ` ${line}\n` +
+    `< ${displayMsg} >\n` +
+    ` ${line}\n` +
+    "        \\   ^__^\n" +
+    "         \\  (oo)\\_______\n" +
+    "            (__)\\       )\\/\\\n" +
+    "                ||----w |\n" +
+    "                ||     ||\n"
+  );
+};
+
+const KONAMI_CODE = ["ArrowUp", "ArrowUp", "ArrowDown", "ArrowDown", "ArrowLeft", "ArrowRight", "ArrowLeft", "ArrowRight", "KeyB", "KeyA"];
+
 const initialText = [
   "Hi, I'm Colin.",
   "",
@@ -56,6 +126,42 @@ export default function Terminal() {
     "whoami": {
       description: "Display information about Colin",
     },
+    "neofetch": {
+      description: "Display system information (Colin edition)",
+    },
+    "ls": {
+      description: "List directory contents",
+    },
+    "cd": {
+      description: "Change directory (cd case-studies, cd projects)",
+    },
+    "theme": {
+      description: "Change terminal color scheme (e.g. theme green)",
+    },
+    "colors": {
+      description: "Alias for theme",
+    },
+    "banner": {
+      description: "Display ASCII banner",
+    },
+    "date": {
+      description: "Display current date and time",
+    },
+    "pwd": {
+      description: "Print working directory",
+    },
+    "man": {
+      description: "Display manual page (e.g. man colin)",
+    },
+    "cowsay": {
+      description: "Cow says a fortune (or cowsay <message>)",
+    },
+    "cat": {
+      description: "Display file contents (try: cat README)",
+    },
+    "git": {
+      description: "Git commands (try: git status)",
+    },
   };
   const [displayedText, setDisplayedText] = useState<string[]>([""]);
   const [currentLineIndex, setCurrentLineIndex] = useState(0);
@@ -65,13 +171,20 @@ export default function Terminal() {
   const [currentInput, setCurrentInput] = useState("");
   const [historyIndex, setHistoryIndex] = useState(-1);
   const [isDarkMode, setIsDarkMode] = useState(true);
+  const [colorTheme, setColorTheme] = useState<"default" | "green" | "amber" | "nord">("default");
   const [isMounted, setIsMounted] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const terminalRef = useRef<HTMLDivElement>(null);
+  const mountTimeRef = useRef<number>(0);
+  const [startupLine, setStartupLine] = useState<string | null>(null);
+  const [showBoot, setShowBoot] = useState(true);
+  const [useBlockCursor] = useState(true);
+  const konamiIndexRef = useRef(0);
 
   // Check sessionStorage after mount to avoid hydration mismatch
   useEffect(() => {
+    mountTimeRef.current = performance.now();
     // Defer state update to avoid cascading renders
     queueMicrotask(() => {
       setIsMounted(true);
@@ -91,6 +204,11 @@ export default function Terminal() {
     checkMobile();
     window.addEventListener("resize", checkMobile);
 
+    const savedTheme = localStorage.getItem("terminal-color-theme") as "green" | "amber" | "nord" | null;
+    if (savedTheme === "green" || savedTheme === "amber" || savedTheme === "nord") {
+      setColorTheme(savedTheme);
+    }
+
     const hasAnimated = sessionStorage.getItem("terminal-animated") === "true";
 
     if (hasAnimated) {
@@ -104,8 +222,32 @@ export default function Terminal() {
       });
     }
 
+    // Compute and display startup line (current time + duration)
+    requestAnimationFrame(() => {
+      const endTime = performance.now();
+      const durationMs = Math.round(endTime - mountTimeRef.current);
+      const now = new Date();
+      const timeStr = now.toTimeString().slice(0, 8); // HH:mm:ss
+      setStartupLine(
+        `${timeStr} runtime.Colinaut - Startup completed in ${durationMs}ms`
+      );
+    });
+
+    // Boot sequence - skip if returning visitor
+    let bootTimer: ReturnType<typeof setTimeout> | null = null;
+    const hasBooted = sessionStorage.getItem("terminal-booted") === "true";
+    if (hasBooted) {
+      setShowBoot(false);
+    } else {
+      bootTimer = setTimeout(() => {
+        setShowBoot(false);
+        sessionStorage.setItem("terminal-booted", "true");
+      }, 2000);
+    }
+
     return () => {
       window.removeEventListener("resize", checkMobile);
+      if (bootTimer) clearTimeout(bootTimer);
     };
   }, []);
 
@@ -212,6 +354,132 @@ export default function Terminal() {
     } else if (trimmedCmd === "whoami") {
       output =
         "Colin Young\nPlatform Engineer & Piano Teacher\n\nI create web apps and mobile apps. I work with businesses to help streamline processes.";
+    } else if (trimmedCmd === "neofetch") {
+      output =
+        "       colinyoung.scot\n" +
+        "─────────────────────────────────────\n" +
+        "OS:         macOS\n" +
+        "Shell:      zsh\n" +
+        "Editor:     vim / Cursor\n" +
+        "Languages:  TypeScript, Python\n" +
+        "Focus:      Platform Engineering\n" +
+        "Side quest: Piano teaching\n" +
+        "─────────────────────────────────────";
+    } else if (trimmedCmd === "vim" || trimmedCmd.startsWith("vim ")) {
+      output =
+        "This is fine. Press :q to exit.\n\n(Just kidding, you're already out.)";
+    } else if (trimmedCmd === "sudo" || trimmedCmd.startsWith("sudo ")) {
+      output = "sudo: Nice try. Permission denied.";
+    } else if (trimmedCmd === "fortune") {
+      output =
+        FORTUNES[Math.floor(Math.random() * FORTUNES.length)];
+    } else if (trimmedCmd === "exit" || trimmedCmd === "quit") {
+      output = "You can't exit. You're in a browser.";
+    } else if (trimmedCmd === "reboot") {
+      output = "Nice try.";
+    } else if (trimmedCmd === "sl") {
+      output = "sl: command not found. Did you mean ls?";
+    } else if (trimmedCmd === "uname" || trimmedCmd.startsWith("uname ")) {
+      output =
+        "Colinaut colinyoung.scot 1.0.0 Colinaut x86_64 colinyoung-scot-generic";
+    } else if (trimmedCmd === "date") {
+      output = new Date().toString();
+    } else if (trimmedCmd === "rm -rf /" || /^rm\s+-rf\s+\/\s*$/.test(trimmedCmd)) {
+      output = "I'm sorry, I'm afraid I can't do that.";
+    } else if (trimmedCmd === "pwd") {
+      output = "/home/colin";
+    } else if (trimmedCmd.startsWith("cat ")) {
+      const file = trimmedCmd.replace(/^cat\s+/, "").trim();
+      if (file.toLowerCase() === "readme") {
+        output = README_CONTENT;
+      } else {
+        output = `cat: ${file}: No such file or directory`;
+      }
+    } else if (trimmedCmd === "git" || trimmedCmd.startsWith("git ")) {
+      if (trimmedCmd === "git status") {
+        output =
+          "On branch main\nYour branch is up to date with 'origin/main'.\n\n" +
+          "nothing to commit, working tree clean";
+      } else {
+        output =
+          "git status was just a flex. That's the only git command that works here.";
+      }
+    } else if (trimmedCmd.startsWith("man ")) {
+      const manArg = trimmedCmd.replace(/^man\s+/, "").trim().toLowerCase();
+      if (manArg === "colin") {
+        output = MAN_COLIN;
+      } else if (manArg === "ls") {
+        output =
+          "LS(1)                    User Commands                    LS(1)\n\nNAME\n     ls - list directory contents\n\nSYNOPSIS\n     ls [OPTION]... [FILE]...\n\nDESCRIPTION\n     List information about directories (case-studies, projects).\n";
+      } else if (manArg === "cd") {
+        output =
+          "CD(1)                    User Commands                    CD(1)\n\nNAME\n     cd - change directory\n\nSYNOPSIS\n     cd DIRECTORY\n\nDESCRIPTION\n     Change to DIRECTORY. Use 'ls' to see available directories.\n";
+      } else if (manArg === "help" || manArg === "theme") {
+        output = `No manual entry for ${manArg}. Try 'help' for usage.`;
+      } else {
+        output = `No manual entry for ${manArg}`;
+      }
+    } else if (trimmedCmd === "cowsay" || trimmedCmd.startsWith("cowsay ")) {
+      const msg =
+        trimmedCmd === "cowsay"
+          ? FORTUNES[Math.floor(Math.random() * FORTUNES.length)]
+          : trimmedCmd.replace(/^cowsay\s+/, "");
+      output = COW_SAY(msg);
+    } else if (trimmedCmd === "cd" || trimmedCmd.startsWith("cd ")) {
+      if (trimmedCmd === "cd") {
+        output = `Usage: cd <directory>\nAvailable: ${LS_DIRECTORIES.join(", ")}`;
+      } else {
+        const dir = trimmedCmd.replace(/^cd\s+/, "").trim().toLowerCase();
+        const normalizedDir = LS_DIRECTORIES.find(
+          (d) => d.toLowerCase() === dir || d.toLowerCase().startsWith(dir)
+        );
+        if (normalizedDir) {
+          output = `Changing directory to ${normalizedDir}...`;
+          setCommandHistory((prev: Command[]) => [
+            ...prev,
+            { command: cmd, output },
+          ]);
+          setCurrentInput("");
+          setHistoryIndex(-1);
+          setTimeout(() => {
+            router.push(`/${normalizedDir}`);
+          }, 500);
+          return;
+        } else {
+          output = `404: Directory not found: ${dir}`;
+        }
+      }
+    } else if (trimmedCmd === "ls" || trimmedCmd === "ls -la" || trimmedCmd === "ls -l") {
+      if (trimmedCmd === "ls") {
+        output = "case-studies/\tprojects/";
+      } else {
+        output =
+          "drwxr-xr-x  2 colin  staff  128  colinyoung  case-studies\n" +
+          "drwxr-xr-x  2 colin  staff  128  colinyoung  projects";
+      }
+    } else if (trimmedCmd === "banner") {
+      output = ASCII_BANNER;
+    } else if (trimmedCmd === "theme" || trimmedCmd === "colors") {
+      output =
+        "Available themes: default, green, amber, nord\n" +
+        "Usage: theme <name>\n\n" +
+        "Current: " + colorTheme;
+    } else if (trimmedCmd.startsWith("theme ") || trimmedCmd.startsWith("colors ")) {
+      const themeArg = trimmedCmd.replace(/^(theme|colors) /, "").trim().toLowerCase();
+      const validThemes = ["default", "green", "amber", "nord"];
+      if (validThemes.includes(themeArg)) {
+        setColorTheme(themeArg as "default" | "green" | "amber" | "nord");
+        if (typeof window !== "undefined") {
+          if (themeArg === "default") {
+            localStorage.removeItem("terminal-color-theme");
+          } else {
+            localStorage.setItem("terminal-color-theme", themeArg);
+          }
+        }
+        output = `Theme set to ${themeArg}.`;
+      } else {
+        output = `Unknown theme: ${themeArg}\nAvailable: ${validThemes.join(", ")}`;
+      }
     } else if (trimmedCmd in commands) {
       const command = commands[trimmedCmd as keyof Commands];
       if (command.action) {
@@ -239,12 +507,75 @@ export default function Terminal() {
   };
 
   const handleTabComplete = (input: string): string => {
-    const trimmedInput = input.trim().toLowerCase();
-    if (!trimmedInput) return input;
+    const trimmedInput = input.trimStart();
+    const trimmedLower = trimmedInput.toLowerCase();
+    if (!trimmedLower) return input;
+
+    // Handle "cd <dir>" - tab complete directory names
+    const cdMatch = trimmedLower.match(/^cd\s+(.*)$/);
+    if (cdMatch) {
+      const dirPrefix = cdMatch[1];
+      const matchingDirs = LS_DIRECTORIES.filter((d) =>
+        d.toLowerCase().startsWith(dirPrefix.toLowerCase())
+      );
+      if (matchingDirs.length === 0) return input;
+      if (matchingDirs.length === 1) {
+        return `cd ${matchingDirs[0]}`;
+      }
+      // Multiple matches - find longest common prefix
+      let commonPrefix: string = matchingDirs[0];
+      for (let i = 1; i < matchingDirs.length; i++) {
+        const d = matchingDirs[i];
+        let j = 0;
+        while (
+          j < commonPrefix.length &&
+          j < d.length &&
+          commonPrefix[j].toLowerCase() === d[j].toLowerCase()
+        ) {
+          j++;
+        }
+        commonPrefix = commonPrefix.substring(0, j);
+      }
+      if (commonPrefix.length > dirPrefix.length) {
+        return `cd ${commonPrefix}`;
+      }
+      return input;
+    }
+
+    // Handle "theme <name>" and "colors <name>" - tab complete theme names
+    const themeMatch = trimmedLower.match(/^(theme|colors)\s+(.*)$/);
+    if (themeMatch) {
+      const themePrefix = themeMatch[2];
+      const validThemes = ["default", "green", "amber", "nord"];
+      const matchingThemes = validThemes.filter((t) =>
+        t.toLowerCase().startsWith(themePrefix.toLowerCase())
+      );
+      if (matchingThemes.length === 0) return input;
+      if (matchingThemes.length === 1) {
+        return `${trimmedInput.split(/\s+/)[0]} ${matchingThemes[0]}`;
+      }
+      let commonPrefix: string = matchingThemes[0];
+      for (let i = 1; i < matchingThemes.length; i++) {
+        const t = matchingThemes[i];
+        let j = 0;
+        while (
+          j < commonPrefix.length &&
+          j < t.length &&
+          commonPrefix[j].toLowerCase() === t[j].toLowerCase()
+        ) {
+          j++;
+        }
+        commonPrefix = commonPrefix.substring(0, j);
+      }
+      if (commonPrefix.length > themePrefix.length) {
+        return `${trimmedInput.split(/\s+/)[0]} ${commonPrefix}`;
+      }
+      return input;
+    }
 
     // Find commands that start with the input
     const matchingCommands = Object.keys(commands).filter((cmd) =>
-      cmd.toLowerCase().startsWith(trimmedInput)
+      cmd.toLowerCase().startsWith(trimmedLower)
     );
 
     if (matchingCommands.length === 0) {
@@ -271,7 +602,7 @@ export default function Terminal() {
       }
 
       // If the common prefix is longer than the input, use it
-      if (commonPrefix.length > trimmedInput.length) {
+      if (commonPrefix.length > trimmedLower.length) {
         return commonPrefix;
       }
 
@@ -281,6 +612,30 @@ export default function Terminal() {
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    // Konami code detection
+    if (KONAMI_CODE[konamiIndexRef.current] === e.code) {
+      konamiIndexRef.current++;
+      if (konamiIndexRef.current === KONAMI_CODE.length) {
+        konamiIndexRef.current = 0;
+        setColorTheme("green");
+        if (typeof window !== "undefined") {
+          localStorage.setItem("terminal-color-theme", "green");
+        }
+        setCommandHistory((prev) => [
+          ...prev,
+          {
+            command: "↑↑↓↓←→←→BA",
+            output: "+30 lives. Green phosphor mode activated!",
+          },
+        ]);
+        setCurrentInput("");
+        setHistoryIndex(-1);
+        return;
+      }
+    } else {
+      konamiIndexRef.current = 0;
+    }
+
     if (e.key === "Enter") {
       handleCommand(currentInput);
     } else if (e.key === "Tab" && !isMobile) {
@@ -290,19 +645,55 @@ export default function Terminal() {
       if (completed !== currentInput) {
         setCurrentInput(completed);
       } else {
-        // Show available commands if multiple matches
         const trimmedInput = currentInput.trim().toLowerCase();
-        const matchingCommands = Object.keys(commands).filter((cmd) =>
-          cmd.toLowerCase().startsWith(trimmedInput)
-        );
-        if (matchingCommands.length > 1) {
-          const output = `Available commands: ${matchingCommands.join(", ")}`;
-          setCommandHistory((prev: Command[]) => [
-            ...prev,
-            { command: currentInput, output },
-          ]);
-          setCurrentInput("");
-          setHistoryIndex(-1);
+        // Check for cd <dir> multiple matches
+        const cdMatch = trimmedInput.match(/^cd\s+(.*)$/);
+        if (cdMatch) {
+          const dirPrefix = cdMatch[1];
+          const matchingDirs = LS_DIRECTORIES.filter((d) =>
+            d.toLowerCase().startsWith(dirPrefix.toLowerCase())
+          );
+          if (matchingDirs.length > 1) {
+            const output = `Available directories: ${matchingDirs.join(", ")}`;
+            setCommandHistory((prev: Command[]) => [
+              ...prev,
+              { command: currentInput, output },
+            ]);
+            setCurrentInput("");
+            setHistoryIndex(-1);
+          }
+        } else {
+          const themeMatch = trimmedInput.match(/^(theme|colors)\s+(.*)$/);
+          if (themeMatch) {
+            const themePrefix = themeMatch[2];
+            const validThemes = ["default", "green", "amber", "nord"];
+            const matchingThemes = validThemes.filter((t) =>
+              t.toLowerCase().startsWith(themePrefix.toLowerCase())
+            );
+            if (matchingThemes.length > 1) {
+              const output = `Available themes: ${matchingThemes.join(", ")}`;
+              setCommandHistory((prev: Command[]) => [
+                ...prev,
+                { command: currentInput, output },
+              ]);
+              setCurrentInput("");
+              setHistoryIndex(-1);
+            }
+          } else {
+            // Show available commands if multiple matches
+            const matchingCommands = Object.keys(commands).filter((cmd) =>
+              cmd.toLowerCase().startsWith(trimmedInput)
+            );
+            if (matchingCommands.length > 1) {
+              const output = `Available commands: ${matchingCommands.join(", ")}`;
+              setCommandHistory((prev: Command[]) => [
+                ...prev,
+                { command: currentInput, output },
+              ]);
+              setCurrentInput("");
+              setHistoryIndex(-1);
+            }
+          }
         }
       }
     } else if (e.key === "ArrowUp") {
@@ -330,9 +721,9 @@ export default function Terminal() {
     }
   };
 
-  // Theme colors
-  const theme = {
-    dark: {
+  // Theme colors - colorTheme overrides when set to green/amber/nord
+  const colorPalettes = {
+    "default-dark": {
       bg: "#0f4c82",
       terminalBg: "#252525",
       terminalBorder: "#4a4a4a",
@@ -344,7 +735,7 @@ export default function Terminal() {
       cursor: "#f0f0f0",
       scrollbar: "#404040",
     },
-    light: {
+    "default-light": {
       bg: "#0f4c82",
       terminalBg: "#ffffff",
       terminalBorder: "#e0e0e0",
@@ -356,19 +747,83 @@ export default function Terminal() {
       cursor: "#1a1a1a",
       scrollbar: "#d0d0d0",
     },
+    green: {
+      bg: "#0a0a0a",
+      terminalBg: "#0a0a0a",
+      terminalBorder: "#1a3d1a",
+      headerBg: "#0a0a0a",
+      headerBorder: "#1a3d1a",
+      text: "#33ff33",
+      textMuted: "#228b22",
+      textOutput: "#2ed42e",
+      cursor: "#33ff33",
+      scrollbar: "#1a3d1a",
+    },
+    amber: {
+      bg: "#0a0a0a",
+      terminalBg: "#0a0a0a",
+      terminalBorder: "#3d351a",
+      headerBg: "#0a0a0a",
+      headerBorder: "#3d351a",
+      text: "#ffb000",
+      textMuted: "#b8860b",
+      textOutput: "#daa520",
+      cursor: "#ffb000",
+      scrollbar: "#3d351a",
+    },
+    nord: {
+      bg: "#2e3440",
+      terminalBg: "#2e3440",
+      terminalBorder: "#4c566a",
+      headerBg: "#2e3440",
+      headerBorder: "#4c566a",
+      text: "#eceff4",
+      textMuted: "#88c0d0",
+      textOutput: "#d8dee9",
+      cursor: "#eceff4",
+      scrollbar: "#4c566a",
+    },
   };
 
-  const colors = isDarkMode ? theme.dark : theme.light;
+  const paletteKey =
+    colorTheme === "default"
+      ? isDarkMode
+        ? "default-dark"
+        : "default-light"
+      : colorTheme;
+  const colors = colorPalettes[paletteKey];
+  const isRetroTheme = colorTheme === "green" || colorTheme === "amber";
+
+  // Boot sequence screen
+  if (showBoot) {
+    return (
+      <div
+        className="min-h-screen flex items-center justify-center p-4 font-mono text-sm"
+        style={{ backgroundColor: "#0a0a0a", color: "#33ff33" }}
+      >
+        <div className="max-w-lg w-full whitespace-pre-wrap animate-pulse">
+          {"Colinaut BIOS v1.0\n\n"}
+          <span className="opacity-80">
+            {"CPU: OK\n"}
+            {"Memory: OK\n"}
+            {"Storage: OK\n"}
+            {"Network: OK\n\n"}
+            {"Booting Colinaut...\n"}
+          </span>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div
-      className="min-h-screen flex items-center justify-center p-4"
+      className="min-h-screen flex items-center justify-center p-4 relative"
       style={{ backgroundColor: colors.bg }}
     >
-      <div className="w-full max-w-5xl">
+      <div className="w-full max-w-5xl relative">
         {/* Terminal Window - Ghostty style */}
         <div
-          className="rounded-lg shadow-xl overflow-hidden"
+          className="relative rounded-lg shadow-xl overflow-hidden"
           style={{
             backgroundColor: colors.terminalBg,
             border: `1px solid ${colors.terminalBorder}`,
@@ -404,9 +859,15 @@ export default function Terminal() {
                 colin@colinyoung.scot
               </span>
             </div>
-            {/* Theme Toggle */}
+            {/* Theme Toggle - cycles dark/light for default, resets from custom themes */}
             <button
-              onClick={() => setIsDarkMode(!isDarkMode)}
+              onClick={() => {
+                if (colorTheme !== "default") {
+                  setColorTheme("default");
+                  localStorage.removeItem("terminal-color-theme");
+                }
+                setIsDarkMode(!isDarkMode);
+              }}
               className="p-1.5 rounded hover:bg-opacity-20 transition-colors"
               style={{
                 backgroundColor: isDarkMode
@@ -460,7 +921,7 @@ export default function Terminal() {
           <div
             ref={terminalRef}
             onClick={handleTerminalClick}
-            className="p-4 md:p-6 font-mono text-sm h-[400px] md:h-[600px] overflow-y-auto cursor-text"
+            className="relative p-4 md:p-6 font-mono text-sm h-[400px] md:h-[600px] overflow-y-auto cursor-text"
             style={{
               backgroundColor: colors.terminalBg,
               color: colors.text,
@@ -469,6 +930,38 @@ export default function Terminal() {
               scrollbarColor: `${colors.scrollbar} ${colors.terminalBg}`,
             }}
           >
+            {/* CRT Scanlines - green/amber themes only */}
+            {isRetroTheme && (
+              <div
+                className="absolute inset-0 pointer-events-none overflow-hidden"
+                style={{
+                  backgroundImage: `repeating-linear-gradient(
+                    0deg,
+                    transparent,
+                    transparent 2px,
+                    rgba(0,0,0,0.15) 2px,
+                    rgba(0,0,0,0.15) 4px
+                  )`,
+                }}
+                aria-hidden
+              />
+            )}
+            {/* ASCII Banner - shown on load */}
+            <div
+              className="mb-4 whitespace-pre font-mono text-xs md:text-sm opacity-80"
+              style={{ color: colors.textMuted, lineHeight: 1.3 }}
+            >
+              {ASCII_BANNER}
+            </div>
+            {/* Startup line */}
+            {startupLine && (
+              <div
+                className="mb-4 font-mono text-sm"
+                style={{ color: colors.textMuted }}
+              >
+                {startupLine}
+              </div>
+            )}
             {/* Animated intro text */}
             {displayedText.length > 0 &&
               displayedText.map((line: string, index: number) => (
@@ -487,11 +980,13 @@ export default function Terminal() {
                     currentCharIndex <
                       initialText[currentLineIndex]?.length && (
                       <span
-                        className="inline-block ml-0.5 animate-pulse"
+                        className="inline-block animate-pulse"
                         style={{
-                          width: "2px",
-                          height: "16px",
+                          width: useBlockCursor ? "1ch" : "2px",
+                          height: "1.2em",
+                          marginLeft: useBlockCursor ? "1px" : "4px",
                           backgroundColor: colors.cursor,
+                          verticalAlign: "text-bottom",
                         }}
                       ></span>
                     )}
@@ -503,9 +998,10 @@ export default function Terminal() {
               <span
                 className="inline-block animate-pulse"
                 style={{
-                  width: "2px",
-                  height: "16px",
+                  width: useBlockCursor ? "1ch" : "2px",
+                  height: "1.2em",
                   backgroundColor: colors.cursor,
+                  verticalAlign: "text-bottom",
                 }}
               ></span>
             )}
@@ -514,7 +1010,7 @@ export default function Terminal() {
             {commandHistory.map((item: Command, index: number) => (
               <div key={index} className="mt-3">
                 <div className="mb-1" style={{ color: colors.text }}>
-                  <span style={{ color: colors.textMuted }}>$ </span>
+                  <span style={{ color: colors.textMuted }}>{PROMPT}</span>
                   <span style={{ color: colors.text }}>{item.command}</span>
                 </div>
                 <div
@@ -530,7 +1026,7 @@ export default function Terminal() {
             {!isTyping && (
               <div className="mt-3 flex items-center">
                 <span className="mr-2" style={{ color: colors.textMuted }}>
-                  $
+                  {PROMPT}
                 </span>
                 <input
                   ref={inputRef}
@@ -548,11 +1044,13 @@ export default function Terminal() {
                   spellCheck="false"
                 />
                 <span
-                  className="inline-block ml-1 animate-pulse"
+                  className="inline-block animate-pulse"
                   style={{
-                    width: "2px",
-                    height: "16px",
+                    width: useBlockCursor ? "1ch" : "2px",
+                    height: "1.2em",
+                    marginLeft: useBlockCursor ? "1px" : "4px",
                     backgroundColor: colors.cursor,
+                    verticalAlign: "text-bottom",
                   }}
                 ></span>
               </div>
