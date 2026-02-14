@@ -35,6 +35,12 @@ const projects: {
     category: "Web Apps",
     items: [
       {
+        title: "WOD Clock",
+        description:
+          "Fitness timers for your workouts. Including Tabata, EMOM, HIIT and AMRAPs. Fully customisable and you can save your favourites.",
+        url: "https://wodclock.app/",
+      },
+      {
         title: "Gomoku",
         description:
           "Playable Gomoku game with weekly leaderboards and guides.",
