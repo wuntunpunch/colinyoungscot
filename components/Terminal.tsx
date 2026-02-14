@@ -211,7 +211,7 @@ export default function Terminal() {
 
     const savedTheme = localStorage.getItem("terminal-color-theme") as "green" | "amber" | "nord" | null;
     if (savedTheme === "green" || savedTheme === "amber" || savedTheme === "nord") {
-      setColorTheme(savedTheme);
+      queueMicrotask(() => setColorTheme(savedTheme));
     }
 
     const hasAnimated = sessionStorage.getItem("terminal-animated") === "true";
@@ -227,8 +227,11 @@ export default function Terminal() {
       });
     }
 
-    // Compute and display startup line (current time + duration)
-    requestAnimationFrame(() => {
+    // Boot sequence - skip if returning visitor
+    let bootTimer: ReturnType<typeof setTimeout> | null = null;
+    const hasBooted = sessionStorage.getItem("terminal-booted") === "true";
+
+    const setStartupLineWithDuration = () => {
       const endTime = performance.now();
       const durationMs = Math.round(endTime - mountTimeRef.current);
       const now = new Date();
@@ -236,15 +239,16 @@ export default function Terminal() {
       setStartupLine(
         `${timeStr} runtime.Colinaut - Startup completed in ${durationMs}ms`
       );
-    });
+    };
 
-    // Boot sequence - skip if returning visitor
-    let bootTimer: ReturnType<typeof setTimeout> | null = null;
-    const hasBooted = sessionStorage.getItem("terminal-booted") === "true";
     if (hasBooted) {
-      setShowBoot(false);
+      queueMicrotask(() => {
+        setShowBoot(false);
+        requestAnimationFrame(setStartupLineWithDuration);
+      });
     } else {
       bootTimer = setTimeout(() => {
+        setStartupLineWithDuration();
         setShowBoot(false);
         sessionStorage.setItem("terminal-booted", "true");
       }, 2000);
@@ -256,9 +260,9 @@ export default function Terminal() {
     };
   }, []);
 
-  // Typing animation effect
+  // Typing animation effect - pause until BIOS boot is complete
   useEffect(() => {
-    if (!isMounted) return; // Wait for mount to avoid hydration issues
+    if (!isMounted || showBoot) return; // Wait for mount and boot to complete
 
     if (!isTyping || currentLineIndex >= initialText.length) {
       // Defer state update to avoid cascading renders
@@ -299,7 +303,7 @@ export default function Terminal() {
         }
       }, 100);
     }
-  }, [currentLineIndex, currentCharIndex, isTyping, isMounted]);
+  }, [currentLineIndex, currentCharIndex, isTyping, isMounted, showBoot]);
 
   // Scroll to bottom when content changes
   useEffect(() => {
