@@ -35,6 +35,12 @@ const projects: {
     category: "Web Apps",
     items: [
       {
+        title: "Gomoku",
+        description:
+          "Playable Gomoku game with weekly leaderboards and guides.",
+        url: "https://gomoku.fun",
+      },
+      {
         title: "Music Theory Quest",
         description:
           "Interactive music theory games and quizzes including interval training, note identification, chord recognition, and rhythm challenges.",
