@@ -841,7 +841,10 @@ export default function Terminal() {
     >
       {showSnakeGame && (
         <SnakeGame
-          onClose={() => setShowSnakeGame(false)}
+          onClose={() => {
+            setShowSnakeGame(false);
+            setTimeout(() => inputRef.current?.focus(), 0);
+          }}
           isMobile={isMobile}
           colors={{
             bg: colors.terminalBg,
