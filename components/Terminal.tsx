@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
+import SnakeGame from "@/components/SnakeGame";
 
 interface Command {
   command: string;
@@ -162,6 +163,9 @@ export default function Terminal() {
     "git": {
       description: "Git commands (try: git status)",
     },
+    "snake": {
+      description: "Play snake",
+    },
   };
   const [displayedText, setDisplayedText] = useState<string[]>([""]);
   const [currentLineIndex, setCurrentLineIndex] = useState(0);
@@ -180,6 +184,7 @@ export default function Terminal() {
   const [startupLine, setStartupLine] = useState<string | null>(null);
   const [showBoot, setShowBoot] = useState(true);
   const [useBlockCursor] = useState(true);
+  const [showSnakeGame, setShowSnakeGame] = useState(false);
   const konamiIndexRef = useRef(0);
 
   // Check sessionStorage after mount to avoid hydration mismatch
@@ -480,6 +485,16 @@ export default function Terminal() {
       } else {
         output = `Unknown theme: ${themeArg}\nAvailable: ${validThemes.join(", ")}`;
       }
+    } else if (trimmedCmd === "snake") {
+      output = "ssssnake...";
+      setCommandHistory((prev: Command[]) => [
+        ...prev,
+        { command: cmd, output },
+      ]);
+      setCurrentInput("");
+      setHistoryIndex(-1);
+      setShowSnakeGame(true);
+      return;
     } else if (trimmedCmd in commands) {
       const command = commands[trimmedCmd as keyof Commands];
       if (command.action) {
@@ -820,6 +835,18 @@ export default function Terminal() {
       className="min-h-screen flex items-center justify-center p-4 relative"
       style={{ backgroundColor: colors.bg }}
     >
+      {showSnakeGame && (
+        <SnakeGame
+          onClose={() => setShowSnakeGame(false)}
+          isMobile={isMobile}
+          colors={{
+            bg: colors.terminalBg,
+            text: colors.text,
+            muted: colors.textMuted,
+            border: colors.terminalBorder,
+          }}
+        />
+      )}
       <div className="w-full max-w-5xl relative">
         {/* Terminal Window - Ghostty style */}
         <div
