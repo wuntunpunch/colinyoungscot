@@ -183,13 +183,22 @@ export default function SnakeGame({ onClose, isMobile, colors }: SnakeGameProps)
   const snakeSet = new Set(snake.map(([x, y]) => `${x},${y}`));
   const foodKey = `${food[0]},${food[1]}`;
 
+  const gameContainerRef = useRef<HTMLDivElement>(null);
+
+  // Steal focus when mounted so arrow keys go to the game, not the terminal input
+  useEffect(() => {
+    gameContainerRef.current?.focus();
+  }, []);
+
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60"
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
       <div
-        className="rounded-lg shadow-2xl overflow-hidden flex flex-col"
+        ref={gameContainerRef}
+        tabIndex={-1}
+        className="rounded-lg shadow-2xl overflow-hidden flex flex-col outline-none"
         onClick={(e) => e.stopPropagation()}
         style={{
           backgroundColor: colors.bg,
