@@ -3,7 +3,7 @@ import ProjectsContent from "./ProjectsContent";
 export const metadata = {
   title: "Projects - Colin Young",
   description:
-    "My projects including piano teaching, web applications, and mobile apps.",
+    "Custom web apps, booking systems, and websites — case studies from West Scotland businesses.",
 };
 
 export default function ProjectsPage() {

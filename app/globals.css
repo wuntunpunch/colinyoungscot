@@ -6,10 +6,17 @@
   --color-accent: #66b2ff;
   --color-muted: #404040;
   --font-sans: var(--font-inter);
+  --font-display: var(--font-bebas);
 }
 
 body {
   background: var(--color-background);
   color: var(--color-foreground);
   font-family: var(--font-inter), system-ui, -apple-system, sans-serif;
+}
+
+h1, h2, h3, h4 {
+  font-family: var(--font-bebas), sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }

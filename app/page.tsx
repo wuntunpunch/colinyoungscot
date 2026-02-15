@@ -1,5 +1,5 @@
-import Terminal from "@/components/Terminal";
+import HomePageWrapper from "@/components/HomePageWrapper";
 
 export default function Home() {
-  return <Terminal />;
+  return <HomePageWrapper />;
 }
