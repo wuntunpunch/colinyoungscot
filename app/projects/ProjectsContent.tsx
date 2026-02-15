@@ -95,7 +95,13 @@ export default function ProjectsContent() {
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mt-4">
           <div>
             <h1 className="text-4xl md:text-5xl font-normal">Projects</h1>
-            <p className="text-accent text-base mt-2">Click tile to visit</p>
+            <p className="text-accent text-base mt-2">
+              Click tile to visit — interested in similar?{" "}
+              <Link href="/services" className="text-accent hover:underline">
+                See my services
+              </Link>
+              .
+            </p>
           </div>
           <div className="flex flex-wrap gap-2">
             {categories.map((category) => (

@@ -44,11 +44,11 @@ const LS_DIRECTORIES = ["case-studies", "projects"] as const;
 
 const README_CONTENT =
   "# colinyoung.scot\n\n" +
-  "Platform engineer by day, piano teacher by night.\n\n" +
+  "Business process streamlining for West Scotland.\n\n" +
   "## What I do\n\n" +
-  "- Build web and mobile apps\n" +
+  "- Custom booking systems and process tools\n" +
   "- Automate manual business processes\n" +
-  "- Teach piano\n\n" +
+  "- Websites when needed\n\n" +
   "## Navigation\n\n" +
   "  cd case-studies  - View case studies\n" +
   "  cd projects     - View projects\n" +
@@ -57,16 +57,16 @@ const README_CONTENT =
 const MAN_COLIN =
   "COLIN(1)                    General Commands Manual                   COLIN(1)\n\n" +
   "NAME\n" +
-  "     Colin – Platform engineer and piano teacher\n\n" +
+  "     Colin – Business process streamlining, West Scotland\n\n" +
   "SYNOPSIS\n" +
-  "     colin [--build] [--automate] [--teach]\n\n" +
+  "     colin [--build] [--automate] [--streamline]\n\n" +
   "DESCRIPTION\n" +
-  "     Colin creates web and mobile applications, specializing in automating\n" +
-  "     manual business processes. By night, he teaches piano.\n\n" +
+  "     Colin builds custom booking systems and web apps that streamline\n" +
+  "     business processes, specializing in replacing manual admin work.\n\n" +
   "OPTIONS\n" +
   "     --build      Creates custom software solutions\n" +
   "     --automate   Eliminates repetitive admin work\n" +
-  "     --teach      Piano instruction\n\n" +
+  "     --streamline Custom tools for your workflow\n\n" +
   "SEE ALSO\n" +
   "     whoami(1), neofetch(1), man(1)\n";
 
@@ -92,15 +92,19 @@ const initialText = [
   "Hi, I'm Colin.",
   "",
   "",
-  "Platform engineer by day, piano teacher by night.",
+  "I build custom tools that streamline business processes — West Scotland.",
   "",
   "",
-  "If manual business processes and repetitive admin work are eating up your day, you're wasting time and money. I build web and mobile apps that automate what shouldn't need a human.",
+  "If manual business processes and repetitive admin work are eating up your day, you're wasting time and money. Custom booking systems, admin tools, and web apps that automate what shouldn't need a human.",
   "",
   "Type 'help' for available commands.",
 ];
 
-export default function Terminal() {
+interface TerminalProps {
+  skipBoot?: boolean;
+}
+
+export default function Terminal({ skipBoot = false }: TerminalProps) {
   const router = useRouter();
   const commands: Commands = {
     "help": {
@@ -182,7 +186,7 @@ export default function Terminal() {
   const terminalRef = useRef<HTMLDivElement>(null);
   const mountTimeRef = useRef<number>(0);
   const [startupLine, setStartupLine] = useState<string | null>(null);
-  const [showBoot, setShowBoot] = useState(true);
+  const [showBoot, setShowBoot] = useState(!skipBoot);
   const [useBlockCursor] = useState(true);
   const [showSnakeGame, setShowSnakeGame] = useState(false);
   const konamiIndexRef = useRef(0);
@@ -227,9 +231,9 @@ export default function Terminal() {
       });
     }
 
-    // Boot sequence - skip if returning visitor
+    // Boot sequence - skip if returning visitor or skipBoot prop
     let bootTimer: ReturnType<typeof setTimeout> | null = null;
-    const hasBooted = sessionStorage.getItem("terminal-booted") === "true";
+    const hasBooted = skipBoot || sessionStorage.getItem("terminal-booted") === "true";
 
     const setStartupLineWithDuration = () => {
       const endTime = performance.now();
@@ -362,7 +366,7 @@ export default function Terminal() {
       output = "colin@colinyoung.scot";
     } else if (trimmedCmd === "whoami") {
       output =
-        "Colin Young\nPlatform Engineer & Piano Teacher\n\nI create web apps and mobile apps. I work with businesses to help streamline processes.";
+        "Colin Young\nBusiness process streamlining, West Scotland\n\nI build custom booking systems and web apps that streamline business processes.";
     } else if (trimmedCmd === "neofetch") {
       output =
         "       colinyoung.scot\n" +
@@ -371,8 +375,8 @@ export default function Terminal() {
         "Shell:      zsh\n" +
         "Editor:     vim / Cursor\n" +
         "Languages:  TypeScript, Python\n" +
-        "Focus:      Platform Engineering\n" +
-        "Side quest: Piano teaching\n" +
+        "Focus:      Business process streamlining\n" +
+        "Area:       West Scotland\n" +
         "─────────────────────────────────────";
     } else if (trimmedCmd === "vim" || trimmedCmd.startsWith("vim ")) {
       output =
@@ -836,7 +840,7 @@ export default function Terminal() {
 
   return (
     <div
-      className="min-h-screen flex items-center justify-center p-4 relative"
+      className="min-h-screen flex items-start justify-center pt-2 pb-4 px-4 relative"
       style={{ backgroundColor: colors.bg }}
     >
       {showSnakeGame && (

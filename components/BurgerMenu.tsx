@@ -53,6 +53,15 @@ export default function BurgerMenu() {
               </li>
               <li>
                 <Link
+                  href="/services"
+                  onClick={() => setIsOpen(false)}
+                  className="text-foreground hover:text-accent transition-colors text-lg"
+                >
+                  Services
+                </Link>
+              </li>
+              <li>
+                <Link
                   href="/projects"
                   onClick={() => setIsOpen(false)}
                   className="text-foreground hover:text-accent transition-colors text-lg"
