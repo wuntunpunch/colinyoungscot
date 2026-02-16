@@ -72,7 +72,8 @@ const MAN_COLIN =
 
 const COW_SAY = (msg: string) => {
   const maxLen = 40;
-  const displayMsg = msg.length > maxLen - 2 ? msg.slice(0, maxLen - 3) + "…" : msg;
+  const displayMsg =
+    msg.length > maxLen - 2 ? msg.slice(0, maxLen - 3) + "…" : msg;
   const line = "─".repeat(Math.min(displayMsg.length + 2, maxLen));
   return (
     ` ${line}\n` +
@@ -86,13 +87,24 @@ const COW_SAY = (msg: string) => {
   );
 };
 
-const KONAMI_CODE = ["ArrowUp", "ArrowUp", "ArrowDown", "ArrowDown", "ArrowLeft", "ArrowRight", "ArrowLeft", "ArrowRight", "KeyB", "KeyA"];
+const KONAMI_CODE = [
+  "ArrowUp",
+  "ArrowUp",
+  "ArrowDown",
+  "ArrowDown",
+  "ArrowLeft",
+  "ArrowRight",
+  "ArrowLeft",
+  "ArrowRight",
+  "KeyB",
+  "KeyA",
+];
 
 const initialText = [
   "Hi, I'm Colin.",
   "",
   "",
-  "I build custom tools that streamline business processes — West Scotland.",
+  "Platform engineer by day, piano teacher by night. I also help businesses streamline their business processes.",
   "",
   "",
   "If manual business processes and repetitive admin work are eating up your day, you're wasting time and money. Custom booking systems, admin tools, and web apps that automate what shouldn't need a human.",
@@ -179,7 +191,9 @@ export default function Terminal({ skipBoot = false }: TerminalProps) {
   const [currentInput, setCurrentInput] = useState("");
   const [historyIndex, setHistoryIndex] = useState(-1);
   const [isDarkMode, setIsDarkMode] = useState(true);
-  const [colorTheme, setColorTheme] = useState<"default" | "green" | "amber" | "nord">("default");
+  const [colorTheme, setColorTheme] = useState<
+    "default" | "green" | "amber" | "nord"
+  >("default");
   const [isMounted, setIsMounted] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -206,15 +220,24 @@ export default function Terminal({ skipBoot = false }: TerminalProps) {
           navigator.userAgent
         ) ||
         (typeof window !== "undefined" && window.innerWidth < 768) ||
-        ("ontouchstart" in window || navigator.maxTouchPoints > 0);
+        "ontouchstart" in window ||
+        navigator.maxTouchPoints > 0;
       setIsMobile(isMobileDevice);
     };
 
     checkMobile();
     window.addEventListener("resize", checkMobile);
 
-    const savedTheme = localStorage.getItem("terminal-color-theme") as "green" | "amber" | "nord" | null;
-    if (savedTheme === "green" || savedTheme === "amber" || savedTheme === "nord") {
+    const savedTheme = localStorage.getItem("terminal-color-theme") as
+      | "green"
+      | "amber"
+      | "nord"
+      | null;
+    if (
+      savedTheme === "green" ||
+      savedTheme === "amber" ||
+      savedTheme === "nord"
+    ) {
       queueMicrotask(() => setColorTheme(savedTheme));
     }
 
@@ -233,7 +256,8 @@ export default function Terminal({ skipBoot = false }: TerminalProps) {
 
     // Boot sequence - skip if returning visitor or skipBoot prop
     let bootTimer: ReturnType<typeof setTimeout> | null = null;
-    const hasBooted = skipBoot || sessionStorage.getItem("terminal-booted") === "true";
+    const hasBooted =
+      skipBoot || sessionStorage.getItem("terminal-booted") === "true";
 
     const setStartupLineWithDuration = () => {
       const endTime = performance.now();
@@ -384,8 +408,7 @@ export default function Terminal({ skipBoot = false }: TerminalProps) {
     } else if (trimmedCmd === "sudo" || trimmedCmd.startsWith("sudo ")) {
       output = "sudo: Nice try. Permission denied.";
     } else if (trimmedCmd === "fortune") {
-      output =
-        FORTUNES[Math.floor(Math.random() * FORTUNES.length)];
+      output = FORTUNES[Math.floor(Math.random() * FORTUNES.length)];
     } else if (trimmedCmd === "exit" || trimmedCmd === "quit") {
       output = "You can't exit. You're in a browser.";
     } else if (trimmedCmd === "reboot") {
@@ -397,7 +420,10 @@ export default function Terminal({ skipBoot = false }: TerminalProps) {
         "Colinaut colinyoung.scot 1.0.0 Colinaut x86_64 colinyoung-scot-generic";
     } else if (trimmedCmd === "date") {
       output = new Date().toString();
-    } else if (trimmedCmd === "rm -rf /" || /^rm\s+-rf\s+\/\s*$/.test(trimmedCmd)) {
+    } else if (
+      trimmedCmd === "rm -rf /" ||
+      /^rm\s+-rf\s+\/\s*$/.test(trimmedCmd)
+    ) {
       output = "I'm sorry, I'm afraid I can't do that.";
     } else if (trimmedCmd === "pwd") {
       output = "/home/colin";
@@ -418,7 +444,10 @@ export default function Terminal({ skipBoot = false }: TerminalProps) {
           "git status was just a flex. That's the only git command that works here.";
       }
     } else if (trimmedCmd.startsWith("man ")) {
-      const manArg = trimmedCmd.replace(/^man\s+/, "").trim().toLowerCase();
+      const manArg = trimmedCmd
+        .replace(/^man\s+/, "")
+        .trim()
+        .toLowerCase();
       if (manArg === "colin") {
         output = MAN_COLIN;
       } else if (manArg === "ls") {
@@ -440,9 +469,14 @@ export default function Terminal({ skipBoot = false }: TerminalProps) {
       output = COW_SAY(msg);
     } else if (trimmedCmd === "cd" || trimmedCmd.startsWith("cd ")) {
       if (trimmedCmd === "cd") {
-        output = `Usage: cd <directory>\nAvailable: ${LS_DIRECTORIES.join(", ")}`;
+        output = `Usage: cd <directory>\nAvailable: ${LS_DIRECTORIES.join(
+          ", "
+        )}`;
       } else {
-        const dir = trimmedCmd.replace(/^cd\s+/, "").trim().toLowerCase();
+        const dir = trimmedCmd
+          .replace(/^cd\s+/, "")
+          .trim()
+          .toLowerCase();
         const normalizedDir = LS_DIRECTORIES.find(
           (d) => d.toLowerCase() === dir || d.toLowerCase().startsWith(dir)
         );
@@ -462,7 +496,11 @@ export default function Terminal({ skipBoot = false }: TerminalProps) {
           output = `404: Directory not found: ${dir}`;
         }
       }
-    } else if (trimmedCmd === "ls" || trimmedCmd === "ls -la" || trimmedCmd === "ls -l") {
+    } else if (
+      trimmedCmd === "ls" ||
+      trimmedCmd === "ls -la" ||
+      trimmedCmd === "ls -l"
+    ) {
       if (trimmedCmd === "ls") {
         output = "case-studies/\tprojects/";
       } else {
@@ -476,9 +514,16 @@ export default function Terminal({ skipBoot = false }: TerminalProps) {
       output =
         "Available themes: default, green, amber, nord\n" +
         "Usage: theme <name>\n\n" +
-        "Current: " + colorTheme;
-    } else if (trimmedCmd.startsWith("theme ") || trimmedCmd.startsWith("colors ")) {
-      const themeArg = trimmedCmd.replace(/^(theme|colors) /, "").trim().toLowerCase();
+        "Current: " +
+        colorTheme;
+    } else if (
+      trimmedCmd.startsWith("theme ") ||
+      trimmedCmd.startsWith("colors ")
+    ) {
+      const themeArg = trimmedCmd
+        .replace(/^(theme|colors) /, "")
+        .trim()
+        .toLowerCase();
       const validThemes = ["default", "green", "amber", "nord"];
       if (validThemes.includes(themeArg)) {
         setColorTheme(themeArg as "default" | "green" | "amber" | "nord");
@@ -491,7 +536,9 @@ export default function Terminal({ skipBoot = false }: TerminalProps) {
         }
         output = `Theme set to ${themeArg}.`;
       } else {
-        output = `Unknown theme: ${themeArg}\nAvailable: ${validThemes.join(", ")}`;
+        output = `Unknown theme: ${themeArg}\nAvailable: ${validThemes.join(
+          ", "
+        )}`;
       }
     } else if (trimmedCmd === "snake") {
       output = "ssssnake...";
@@ -708,7 +755,9 @@ export default function Terminal({ skipBoot = false }: TerminalProps) {
               cmd.toLowerCase().startsWith(trimmedInput)
             );
             if (matchingCommands.length > 1) {
-              const output = `Available commands: ${matchingCommands.join(", ")}`;
+              const output = `Available commands: ${matchingCommands.join(
+                ", "
+              )}`;
               setCommandHistory((prev: Command[]) => [
                 ...prev,
                 { command: currentInput, output },
@@ -770,7 +819,7 @@ export default function Terminal({ skipBoot = false }: TerminalProps) {
       cursor: "#1a1a1a",
       scrollbar: "#d0d0d0",
     },
-    green: {
+    "green": {
       bg: "#0a0a0a",
       terminalBg: "#0a0a0a",
       terminalBorder: "#1a3d1a",
@@ -782,7 +831,7 @@ export default function Terminal({ skipBoot = false }: TerminalProps) {
       cursor: "#33ff33",
       scrollbar: "#1a3d1a",
     },
-    amber: {
+    "amber": {
       bg: "#0a0a0a",
       terminalBg: "#0a0a0a",
       terminalBorder: "#3d351a",
@@ -794,7 +843,7 @@ export default function Terminal({ skipBoot = false }: TerminalProps) {
       cursor: "#ffb000",
       scrollbar: "#3d351a",
     },
-    nord: {
+    "nord": {
       bg: "#2e3440",
       terminalBg: "#2e3440",
       terminalBorder: "#4c566a",
