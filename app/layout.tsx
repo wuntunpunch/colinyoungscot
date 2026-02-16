@@ -25,12 +25,21 @@ export const metadata: Metadata = {
       "Custom booking systems, process streamlining, and web apps that replace manual admin. Building tools for businesses across West Scotland.",
     type: "website",
     siteName: "colinyoung.scot",
+    images: [
+      {
+        url: "https://colinyoung.scot/colinyoungscot-og.png",
+        width: 1200,
+        height: 630,
+        alt: "Colin Young - Platform engineer, piano teacher and business process streamliner",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
     title: "Colin Young - Business Process Streamlining & Custom Web Apps | West Scotland",
     description:
       "Custom booking systems, process streamlining, and web apps that replace manual admin. Building tools for businesses across West Scotland.",
+    images: ["https://colinyoung.scot/colinyoungscot-og.png"],
   },
 };
 
