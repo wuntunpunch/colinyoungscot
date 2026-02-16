@@ -840,7 +840,7 @@ export default function Terminal({ skipBoot = false }: TerminalProps) {
 
   return (
     <div
-      className="min-h-screen flex items-start justify-center pt-2 pb-4 px-4 relative"
+      className="min-h-screen flex items-center justify-center pt-2 pb-4 px-4 relative"
       style={{ backgroundColor: colors.bg }}
     >
       {showSnakeGame && (

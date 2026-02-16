@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { Bebas_Neue, Inter } from "next/font/google";
 import "./globals.css";
 import BurgerMenu from "@/components/BurgerMenu";
-import Footer from "@/components/Footer";
 import GoogleAnalytics from "@/components/GoogleAnalytics";
 
 const inter = Inter({
@@ -68,7 +67,6 @@ export default function RootLayout({
         <GoogleAnalytics />
         <BurgerMenu />
         <div className="flex-1">{children}</div>
-        <Footer />
       </body>
     </html>
   );

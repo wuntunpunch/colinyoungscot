@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import Link from "next/link";
 import Terminal from "@/components/Terminal";
 
 const BOOT_DURATION_MS = 2000;
@@ -43,26 +42,5 @@ export default function HomePageWrapper() {
     );
   }
 
-  return (
-    <>
-      <header className="px-6 pt-6 pb-2 text-center">
-        <h1 className="text-2xl md:text-3xl font-normal text-foreground mb-3">
-          Business Process Streamlining
-        </h1>
-        <p className="text-foreground/90 max-w-xl mx-auto mb-4">
-          Custom booking systems, admin tools, and web apps that replace manual
-          processes. West Scotland.
-        </p>
-        <nav className="flex justify-center gap-6 text-sm">
-          <Link href="/services" className="text-accent hover:underline">
-            Services
-          </Link>
-          <Link href="/case-studies" className="text-accent hover:underline">
-            Case Studies
-          </Link>
-        </nav>
-      </header>
-      <Terminal skipBoot />
-    </>
-  );
+  return <Terminal skipBoot />;
 }
