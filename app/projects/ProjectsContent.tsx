@@ -27,7 +27,18 @@ const projects: {
         title: "EAT Cycling",
         description:
           "Bike servicing business website providing information about services and booking.",
-        url: "https://eatcycling.co.uk",
+        url: "https://eatcycling.vercel.app/",
+      },
+    ],
+  },
+  {
+    category: "Ecommerce",
+    items: [
+      {
+        title: "EAT Cycling — Shopify store",
+        description:
+          "Custom Shopify theme for the Largs bike shop: ecommerce, brands, workshop, and hire.",
+        url: "https://eatcycling.co.uk/",
       },
     ],
   },
@@ -72,15 +83,26 @@ const projects: {
   },
 ];
 
-type FilterCategory = "All" | "Web Pages" | "Web Apps" | "Apps";
+type FilterCategory =
+  | "All"
+  | "Web Pages"
+  | "Ecommerce"
+  | "Web Apps"
+  | "Apps";
 
 export default function ProjectsContent() {
   const [selectedFilter, setSelectedFilter] = useState<FilterCategory>("All");
 
-  const categories: FilterCategory[] = ["All", "Web Pages", "Web Apps", "Apps"];
+  const categories: FilterCategory[] = [
+    "All",
+    "Web Pages",
+    "Ecommerce",
+    "Web Apps",
+    "Apps",
+  ];
 
   const filteredProjects = projects.filter((section) =>
-    selectedFilter === "All" ? true : section.category === selectedFilter
+    selectedFilter === "All" ? true : section.category === selectedFilter,
   );
 
   return (
@@ -160,8 +182,8 @@ export default function ProjectsContent() {
                 </p>
                 <span className="text-muted">Coming soon</span>
               </div>
-            )
-          )
+            ),
+          ),
         )}
       </div>
     </main>
