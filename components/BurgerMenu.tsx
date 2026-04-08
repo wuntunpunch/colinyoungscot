@@ -1,19 +1,68 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
+
+const NON_NERDY_NAV_HINT_KEY = "non-nerdy-nav-hint-seen";
+const HINT_DURATION_MS = 5000;
 
 export default function BurgerMenu() {
   const [isOpen, setIsOpen] = useState(false);
+  const [showNavHint, setShowNavHint] = useState(false);
+  const hintTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const dismissNavHint = useCallback(() => {
+    if (hintTimeoutRef.current) {
+      clearTimeout(hintTimeoutRef.current);
+      hintTimeoutRef.current = null;
+    }
+    setShowNavHint(false);
+    if (typeof window !== "undefined") {
+      sessionStorage.setItem(NON_NERDY_NAV_HINT_KEY, "1");
+    }
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (sessionStorage.getItem(NON_NERDY_NAV_HINT_KEY)) return;
+
+    setShowNavHint(true);
+    hintTimeoutRef.current = setTimeout(() => {
+      dismissNavHint();
+    }, HINT_DURATION_MS);
+
+    return () => {
+      if (hintTimeoutRef.current) {
+        clearTimeout(hintTimeoutRef.current);
+      }
+    };
+  }, [dismissNavHint]);
+
+  const toggleMenu = () => {
+    if (showNavHint) dismissNavHint();
+    setIsOpen((open) => !open);
+  };
 
   return (
     <>
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="fixed top-6 left-6 z-50 flex flex-col gap-1.5 p-2 focus:outline-none focus:ring-2 focus:ring-accent rounded"
-        aria-label="Toggle menu"
-        aria-expanded={isOpen}
-      >
+      <div className="fixed top-6 left-6 z-50 flex items-center gap-2 sm:gap-3 max-w-[calc(100vw-1.5rem)]">
+        {showNavHint && (
+          <p
+            className="order-2 flex items-center gap-1 text-xs sm:text-sm text-foreground/90 animate-pulse motion-reduce:animate-none pointer-events-none select-none shrink min-w-0"
+            aria-hidden
+          >
+            <span className="text-accent shrink-0" aria-hidden>
+              ←
+            </span>
+            <span className="leading-tight">non nerdy navigation</span>
+          </p>
+        )}
+        <button
+          onClick={toggleMenu}
+          className="order-1 shrink-0 flex flex-col gap-1.5 p-2 focus:outline-none focus:ring-2 focus:ring-accent rounded"
+          aria-label="Toggle menu"
+          aria-expanded={isOpen}
+        >
         <span
           className={`block w-6 h-0.5 bg-foreground transition-all duration-300 ${
             isOpen ? "rotate-45 translate-y-2" : ""
@@ -30,6 +79,7 @@ export default function BurgerMenu() {
           }`}
         />
       </button>
+      </div>
 
       {isOpen && (
         <>
