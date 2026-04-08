@@ -15,6 +15,15 @@ export interface CaseStudy extends CaseStudyMetadata {
 
 const caseStudiesDirectory = path.join(process.cwd(), "content/case-studies");
 
+/**
+ * Removes a leading Markdown H1 so the case study layout's <header> title is not duplicated.
+ * Only strips a single `#` heading (not `##` etc.).
+ */
+export function stripLeadingMarkdownH1(content: string): string {
+  const trimmed = content.replace(/^\uFEFF/, "").trimStart();
+  return trimmed.replace(/^#[^#\n][^\n]*(?:\r?\n)?/, "");
+}
+
 export function getAllCaseStudies(): CaseStudyMetadata[] {
   if (!fs.existsSync(caseStudiesDirectory)) {
     return [];

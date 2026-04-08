@@ -1,4 +1,8 @@
-import { getCaseStudyBySlug, getAllCaseStudySlugs } from "@/lib/case-studies";
+import {
+  getCaseStudyBySlug,
+  getAllCaseStudySlugs,
+  stripLeadingMarkdownH1,
+} from "@/lib/case-studies";
 import { parseMarkdown } from "@/lib/markdown-to-jsx";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -43,7 +47,7 @@ export default async function CaseStudyPage({ params }: CaseStudyPageProps) {
     notFound();
   }
 
-  const content = parseMarkdown(caseStudy.content);
+  const content = parseMarkdown(stripLeadingMarkdownH1(caseStudy.content));
 
   return (
     <article className="min-h-screen px-6 py-20 max-w-4xl mx-auto">
